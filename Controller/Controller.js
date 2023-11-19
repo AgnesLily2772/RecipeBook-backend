@@ -143,3 +143,6 @@ export const signInUser = async (req, res) => {
                 res.status(404).json({ message: "An error occured" });
         }
       }
+      export const check = (req,res) => {
+        res.send(`Hello, Backend is working fine`)
+      }
