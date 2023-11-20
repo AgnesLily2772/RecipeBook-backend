@@ -13,10 +13,8 @@ app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true ,exposedHeaders: ["Set-Cookie"]}));
 app.use("/api",router);
 
-
 const PORT = process.env.PORT || 5000;
 const DB = process.env.DB_URL;
-
 
 app.listen(PORT,()=>console.log(`Server is running on port: ${PORT}`));
 

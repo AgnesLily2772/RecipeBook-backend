@@ -1,7 +1,7 @@
 import { RecipeModel, UserModel,CommentModel } from "../Model/Model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-// import { sendActivationEmail } from "../Utils/sendMail_old.js";
+import { sendActivationEmail } from "../Utils/mailSender.js";
 
 export const signUpUser = async (req, res) => {
     const { fullName, email,  password, dietPreference, location } = req.body;
@@ -23,7 +23,7 @@ export const signUpUser = async (req, res) => {
         });
         await newUser.save();
         const activationLink = `${process.env.CLIENT_URL}/activate?token=${activationToken}`;
-        // sendActivationEmail(email, activationLink);
+        sendActivationEmail(email, activationLink);
         res.status(200).json(newUser);
     } catch (error) {
         res.status(404).json({ message:  "SignUp Error: "+error });
@@ -49,9 +49,9 @@ export const signInUser = async (req, res) => {
                 }
                 const token = await user.generateSessionToken();
                 //production
-                res.cookie("jwtoken", token, { httpOnly: true, expires: new Date(Date.now() + 3600000), secure: true, sameSite:'none' })
+                // res.cookie("jwtoken", token, { httpOnly: true, expires: new Date(Date.now() + 3600000), secure: true, sameSite:'none' })
                 //development
-                // res.cookie("jwtoken", token, { httpOnly: false, expires: new Date(Date.now() + 3600000), secure: true, sameSite:'none' })
+                res.cookie("jwtoken", token, { httpOnly: false, expires: new Date(Date.now() + 3600000), secure: true, sameSite:'none' })
                 res.status(200).json(user);
         } 
         catch (error) {
@@ -111,6 +111,18 @@ export const signInUser = async (req, res) => {
         }
       };
       
+      export const activateAccount = async (req, res) => {
+        const { token } = req.query;
+        try {
+            const decodedToken = jwt.verify(token, process.env.AUTH_KEY);
+            const { email } = decodedToken;
+            await UserModel.findOneAndUpdate( { email }, { isActivated: true }, { new: true });
+            res.status(200).json({ message: "Account activated successfully" });
+        } catch (error) {
+            res.status(400).json({ message: "Invalid activation token" });
+        }
+    };
+
       export const getUserRecipe =async(req,res) => {
         const userId = req.rootUserId
         const userRecipes = await RecipeModel.find({createdBy:userId})
@@ -143,6 +155,7 @@ export const signInUser = async (req, res) => {
                 res.status(404).json({ message: "An error occured" });
         }
       }
+
       export const check = (req,res) => {
         res.send(`Hello, Backend is working fine`)
       }
